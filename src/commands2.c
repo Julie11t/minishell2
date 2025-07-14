@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   commands2.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jhaddadi <jhaddadi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/29 14:45:04 by jhaddadi          #+#    #+#             */
-/*   Updated: 2025/07/01 14:34:00 by jhaddadi         ###   ########.fr       */
+/*   Updated: 2025/07/14 21:57:48 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-#include <stdio.h>
 
 int	valid_identifier(char *str)
 {

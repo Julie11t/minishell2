@@ -12,7 +12,7 @@ LIBFT_INC   =   $(LIBFT_DIR)
 READLINE_INC =   -I/usr/include/readline
 READLINE_LIB =   -lreadline
 
-SRC         =   tokenize.c main.c utils.c inputs.c commands.c expander.c commands2.c export.c signals.c
+SRC         =   main.c tokenize.c expand.c split_token.c execute.c commands.c commands2.c export.c signals.c
 OBJS        =   $(SRC:.c=.o)
 
 # Include the libft directory and link libft

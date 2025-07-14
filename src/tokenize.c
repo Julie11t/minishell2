@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   tokenize.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jhaddadi <jhaddadi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/29 14:49:43 by jhaddadi          #+#    #+#             */
-/*   Updated: 2025/07/01 17:53:25 by jhaddadi         ###   ########.fr       */
+/*   Updated: 2025/07/10 19:24:06 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	create_token(t_token **token, char *value, char *type)
+void	create_token(t_token **token, char *value, t_token_type type)
 {
 	t_token	*new;
 	t_token	*temp;
@@ -21,7 +21,7 @@ void	create_token(t_token **token, char *value, char *type)
 	if (!new)
 		return ;
 	new->value = ft_strdup(value);
-	new->type = ft_strdup(type);
+	new->type = type;
 	new->next = NULL;
 	if (!*token)
 		*token = new;
@@ -34,75 +34,69 @@ void	create_token(t_token **token, char *value, char *type)
 	}
 }
 
-int	check_command(char *word)
+void	mark_commands(t_token *tokens)
 {
-	if (ft_strcmp(word, "echo") == 0 || ft_strcmp(word, "cd") == 0
-		|| ft_strcmp(word, "pwd") == 0 || ft_strcmp(word, "export") == 0
-		|| ft_strcmp(word, "unset") == 0 || ft_strcmp(word, "env") == 0
-		|| ft_strcmp(word, "exit") == 0)
-		return (1);
-	else if (ft_strcmp(word, "type") == 0 || ft_strcmp(word, "cat") == 0
-		|| ft_strcmp(word, "ls") == 0 || ft_strcmp(word, "clear") == 0)
-		return (1);
-	return (0);
+	t_token		*cur;
+	int		expect_command;
+
+	cur = tokens;
+	expect_command = 1;
+	while (cur)
+	{
+		if (cur->type == PIPE)
+			expect_command = 1;
+		else if (cur->type == WORD && expect_command)
+		{
+			cur->type = COMMAND;
+			expect_command = 0;
+		}
+		cur = cur->next;
+	}
 }
 
-int	check_syntax_error(char **array, t_data *data)
+int		is_syntax_error(t_token *tokens)
 {
-	int	i;
+	t_token	*cur;
 
-	i = 0;
-	while (array[i])
+	cur = tokens;
+	if (!cur)
+		return (0);
+	if (cur->type == PIPE)
+		return (1);
+	while (cur)
 	{
-		if (ft_strcmp(array[i], "|") == 0 || ft_strcmp(array[i], "<") == 0
-			|| ft_strcmp(array[i], ">") == 0 || ft_strcmp(array[i], ">>") == 0
-			|| ft_strcmp(array[i], "<<") == 0)
-		{
-			if (!array[i + 1])
-			{
-				printf("syntax error near unexpected token `newline'\n");
-				data->last_status = 1;
-				return (1);
-			}
-			else if (ft_strcmp(array[i + 1], "|") == 0
-				|| ft_strcmp(array[i + 1], "<") == 0
-				|| ft_strcmp(array[i + 1], ">") == 0
-				|| ft_strcmp(array[i + 1], ">>") == 0
-				|| ft_strcmp(array[i + 1], "<<") == 0)
-			{
-				printf("syntax error near unexpected token '%s'\n", array[i
-					+ 1]);
-				data->last_status = 1;
-				return (1);
-			}
-		}
-		i++;
+		if (cur->type == PIPE
+			&& (!cur->next || cur->next->type == PIPE))
+			return (1);
+		if ((cur->type == REDIR_IN || cur->type == REDIR_OUT
+				|| cur->type == APPEND || cur->type == HEREDOC)
+			&& (!cur->next || cur->next->type != WORD))
+			return (1);
+		cur = cur->next;
 	}
 	return (0);
 }
 
-void	tokenize(char **array, t_token **token)
+void	tokenize(t_token *tokens)
 {
-	int	i;
+	t_token	*cur;
 
-	i = 0;
-	while (array[i])
+	cur = tokens;
+	while (cur)
 	{
-		if (check_command(array[i]))
-			create_token(token, array[i], "command");
-		else if (ft_strcmp(array[i], "|") == 0)
-			create_token(token, "|", "pipe");
-		else if (ft_strcmp(array[i], "<") == 0)
-			create_token(token, array[++i], "redirect input");
-		else if (ft_strcmp(array[i], ">") == 0)
-			create_token(token, array[++i], "redirect output");
-		else if (ft_strcmp(array[i], ">>") == 0)
-			create_token(token, array[++i], "append output");
-		else if (ft_strcmp(array[i], "<<") == 0)
-			create_token(token, array[++i], "here-document");
+		if (ft_strcmp(cur->value, "|") == 0)
+			cur->type = PIPE;
+		else if (ft_strcmp(cur->value, "<") == 0)
+			cur->type = REDIR_IN;
+		else if (ft_strcmp(cur->value, ">") == 0)
+			cur->type = REDIR_OUT;
+		else if (ft_strcmp(cur->value, ">>") == 0)
+			cur->type = APPEND;
+		else if (ft_strcmp(cur->value, "<<") == 0)
+			cur->type = HEREDOC;
 		else
-			create_token(token, array[i], "word");
-		i++;
+			cur->type = WORD;
+		cur = cur->next;
 	}
 }
 
@@ -115,7 +109,6 @@ void	free_tokens(t_token *token)
 		temp = token;
 		token = token->next;
 		free(temp->value);
-		free(temp->type);
 		free(temp);
 	}
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   export.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jhaddadi <jhaddadi@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/29 14:46:24 by jhaddadi          #+#    #+#             */
-/*   Updated: 2025/07/01 17:54:26 by jhaddadi         ###   ########.fr       */
+/*   Updated: 2025/07/14 22:14:20 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,6 +120,8 @@ void	update_env_var(t_data *data, char *var, char *value)
 
 	i = 0;
 	len = ft_strlen(var);
+	if (!var || !value)
+		return ;
 	while (data->env[i])
 	{
 		if (ft_strncmp(data->env[i], var, len) == 0 && data->env[i][len] == '=')
@@ -143,7 +145,7 @@ int	handle_with_equal(char *arg, t_data *data, char *equal)
 	var_len = equal - arg;
 	var = ft_substr(arg, 0, var_len);
 	value = ft_strdup(equal + 1);
-	if (!valid_identifier(var))
+	if (!valid_identifier(var) || var_len == 0)
 	{
 		printf("export: %s: not a valid identifier", arg);
 		free(var);

@@ -24,28 +24,32 @@
 # include <readline/history.h>
 # include "libft/libft.h"
 
-# define MAX_ARGS 1024
-# define BUFFER_SIZE 4096
+// ==============================
+// ENUMS
+// ==============================
 
-// ─────────────────────────────────────────────
-// Structs
-// ─────────────────────────────────────────────
+typedef enum e_token_type
+{
+	WORD,
+	COMMAND,
+	PIPE,
+	REDIR_IN,
+	REDIR_OUT,
+	APPEND,
+	HEREDOC,
+	UNKNOWN
+}	t_token_type;
+
+// ==============================
+// STRUCTS
+// ==============================
 
 typedef struct s_token
 {
 	char			*value;
-	char			*type;
+	t_token_type	type;
 	struct s_token	*next;
 }	t_token;
-
-typedef struct s_parse_state
-{
-	int	i;
-	int	j;
-	int	k;
-	int	in_single_quote;
-	int	in_double_quote;
-}	t_parse_state;
 
 typedef struct s_data
 {
@@ -53,84 +57,57 @@ typedef struct s_data
 	int		last_status;
 }	t_data;
 
-// ─────────────────────────────────────────────
-// Shell Core
-// ─────────────────────────────────────────────
+// ==============================
+// CORE SHELL
+// ==============================
 
-void	init_shell(void);
-void	shell_loop(int argc, t_data *data);
+void	shell_loop(t_data *data);
 char	*get_input(t_data *data);
+char	**copy_env(char **envp);
 
-// ─────────────────────────────────────────────
-// Argument Parsing & Tokens
-// ─────────────────────────────────────────────
+// ==============================
+// TOKENIZATION / PARSING
+// ==============================
 
-char	**parse_arguments(const char *input, int *arg_count);
-void	tokenize(char **array, t_token **token);
-void	create_token(t_token **token, char *value, char *type);
-int		check_command(char *word);
-int		check_syntax_error(char **array, t_data *data);
+t_token	*split_line_to_words(char *line);
+void	create_token(t_token **token, char *value, t_token_type type);
+void	tokenize(t_token *tokens);
+void	mark_commands(t_token *tokens);
+int		is_syntax_error(t_token *tokens);
 void	free_tokens(t_token *token);
 
-// ─────────────────────────────────────────────
-// Built-in Commands
-// ─────────────────────────────────────────────
+// ==============================
+// EXPANSION
+// ==============================
 
-void	handle_command(char *input, char **args, int arg_count, t_token *token, t_data *data);
+void	expand(t_token *tokens, t_data *data);
+char	*expand_token_value(char *input, t_data *data);
+char	*handle_single_quote(char *input, int *i);
+char	*handle_double_quote(char *input, int *i, t_data *data);
+char	*handle_dollar(char *input, int *i, t_data *data);
+char	*join_and_free(char *a, char *b);
+int		is_quoted(char *str);
+void	replace_token_with_multiple(t_token **head, t_token *cur, char **parts);
 
-void	handle_echo_command(t_token *token);
-void	handle_cd_command(char *path, int arg_count, t_data *data);
-void	handle_env_command(char **args, t_data *data);
-void	handle_unset_command(char **args, t_data *data);
-void	handle_export_command(char **args, t_data *data);
+// ==============================
+// BUILTIN EXECUTION
+// ==============================
 
-void	handle_exit_command(char **args, t_data *data);
-void	handle_type_command(const char *input, t_data *data);
-int		is_shell_builtin(const char *cmd);
-void	system_handler(char *input);
-
-// ─────────────────────────────────────────────
-// Export/Unset Helpers
-// ─────────────────────────────────────────────
-
-int		valid_identifier(char *str);
-int		var_exist(char *var, t_data *data);
-void	add_to_env(char *var, t_data *data);
-void	update_env_var(t_data *data, char *var, char *value);
-void	remove_env_var(t_data *data, char *str);
-int		handle_with_equal(char *arg, t_data *data, char *equal);
-int		handle_without_equal(char *arg, t_data *data);
-void	print_exported_env(char **env);
-
-// ─────────────────────────────────────────────
-// Expansion
-// ─────────────────────────────────────────────
-
-char	**expand(char **args, t_data *data);
-char	*expand_token(char *arg, t_data *data);
-char	*expand_dollar(char *arg, int last_status);
-char	*expand_double_quote(char *arg, t_data *data);
-char	*expand_single_quote(char *arg);
-char	*ft_strjoin_free(char *s1, char *s2);
-
-// ─────────────────────────────────────────────
-// Utilities
-// ─────────────────────────────────────────────
-
-char	**copy_env(char **envp);
+void	execute_builtin_tokens(t_token *tokens, t_data *data);
+int	valid_identifier(char *str);
 void	free_env(char **env);
-int		env_len(char **env);
-int		whileloopstring(int i, int j, int len, char *buffer,
-			const char *src, int bufsize, int string);
+void	handle_echo_command(t_token *token);
+// void	handle_cd_command(char **argv, t_data *data);
+// void	handle_pwd_command(void);
+void	handle_export_command(char **argv, t_data *data);
+void	handle_unset_command(char **argv, t_data *data);
+void	handle_env_command(char **args, t_data *data);
+void	handle_exit_command(char **argv, t_data *data);
 
+// ==============================
+// SIGNALS
+// ==============================
 
-void 	execute_builtin(char *input, char **args, int arg_count,
-						t_token *token, t_data *data);
-
-char*	search_commands(const char *input);
-char*	found_commands(const char *input);
 void	set_signals_interactive(void);
-void	set_signals_noninteractive(void);
-//void    set_signals_heredoc();
-void	fatal_error(char *msg, char *input, char **args, t_token *token, t_data *data);
+
 #endif
