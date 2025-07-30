@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/29 14:45:04 by jhaddadi          #+#    #+#             */
-/*   Updated: 2025/07/14 21:57:48 by marvin           ###   ########.fr       */
+/*   Updated: 2025/07/30 12:38:15 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,8 @@ void	remove_env_var(t_data *data, char *str)
 		return ;
 	while (data->env[i])
 	{
-		if (ft_strncmp(data->env[i], str, len) == 0 && data->env[i][len] == '=')
+		if (ft_strncmp(data->env[i], str, len) == 0 &&
+    		(data->env[i][len] == '=' || data->env[i][len] == '\0'))
 			i++;
 		else
 			new_env[j++] = ft_strdup(data->env[i++]);
@@ -66,8 +67,8 @@ void	remove_env_var(t_data *data, char *str)
 	i = 0;
 	while (data->env[i])
 		free(data->env[i++]);
-	data->env = new_env;
 	free(data->env);
+	data->env = new_env;
 }
 
 void	handle_unset_command(char **args, t_data *data)

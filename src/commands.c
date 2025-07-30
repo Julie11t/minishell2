@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/26 17:18:51 by mhasoneh          #+#    #+#             */
-/*   Updated: 2025/07/14 21:56:11 by marvin           ###   ########.fr       */
+/*   Updated: 2025/07/24 19:16:55 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,24 +33,63 @@
 // 		data->last_status = 0;
 // }
 
-void	handle_echo_command(t_token *token)
+void	handle_cd_command(char **argv, t_data *data)
 {
+	const char	*target;
+	char		*home;
+
+	if (!argv[1])
+	{
+		home = getenv("HOME");
+		if (!home)
+		{
+			printf("cd: HOME not set\n");
+			data->last_status = 1;
+			return ;
+		}
+		target = home;
+	}
+	else
+		target = argv[1];
+
+	if (chdir(target) != 0)
+	{
+		perror("cd");
+		data->last_status = 1;
+		return ;
+	}
+	data->last_status = 0;
+}
+
+void	handle_pwd_command(void)
+{
+	char	cwd[1024];
+
+	if (getcwd(cwd, sizeof(cwd)) != NULL)
+		printf("%s\n", cwd);
+	else
+		perror("pwd");
+}
+
+void	handle_echo_command(char **argv)
+{
+	int	i;
 	int	newline;
 
+	i = 1;
 	newline = 1;
-	token = token->next;
-	while (token && ft_strcmp(token->value, "-n") == 0)
+
+	while (argv[i] && ft_strcmp(argv[i], "-n") == 0)
 	{
 		newline = 0;
-		token = token->next;
+		i++;
 	}
-	while (token && (token->type == WORD
-			|| token->type == COMMAND))
+	while (argv[i])
 	{
-		printf("%s", token->value);
-		if (token->next && token->next->type == WORD)
+		printf("%s", argv[i]);
+		if (argv[i + 1])
 			printf(" ");
-		token = token->next;
+		i++;
 	}
 	if (newline)
 		printf("\n");

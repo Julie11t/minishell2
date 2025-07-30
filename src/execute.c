@@ -12,7 +12,6 @@
 
 #include "minishell.h"
 
-// this file is only for testing and the logic might change
 char	**tokens_to_argv(t_token *start)
 {
 	t_token	*cur = start;
@@ -38,47 +37,62 @@ char	**tokens_to_argv(t_token *start)
 	return (argv);
 }
 
-// Free char **argv array
 void	free_argv(char **argv)
 {
-	int	i = 0;
-
+	int		i;
+	
+	i = 0;
 	while (argv && argv[i])
 		free(argv[i++]);
 	free(argv);
 }
 
-void	execute_builtin_tokens(t_token *tokens, t_data *data)
+int	is_builtin(char *command)
 {
-	t_token	*cur = tokens;
-	char	**argv;
+	if (command && (ft_strcmp(command, "echo") == 0
+		|| ft_strcmp(command, "cd") == 0
+		|| ft_strcmp(command, "pwd") == 0
+		|| ft_strcmp(command, "export") == 0
+		|| ft_strcmp(command, "unset") == 0
+		|| ft_strcmp(command, "env") == 0
+		|| ft_strcmp(command, "exit") == 0))
+		return (1);
+	return (0);
+}
 
-	while (cur)
+void	run_builtin(char **argv, t_data *data)
+{
+	if (!argv || !argv[0])
+		return ;
+	if (ft_strcmp(argv[0], "echo") == 0)
+		handle_echo_command(argv);
+	else if (ft_strcmp(argv[0], "cd") == 0)
+		handle_cd_command(argv, data);
+	else if (ft_strcmp(argv[0], "pwd") == 0)
+		handle_pwd_command();
+	else if (ft_strcmp(argv[0], "export") == 0)
+		handle_export_command(argv, data);
+		else if (ft_strcmp(argv[0], "unset") == 0)
+		handle_unset_command(argv, data);
+	else if (ft_strcmp(argv[0], "env") == 0)
+		handle_env_command(argv, data);
+	else if (ft_strcmp(argv[0], "exit") == 0)
+		handle_exit_command(argv, data);
+}
+
+void	execute_command(t_token *command, t_data *data)
+{
+	char	**argv;
+	
+	argv = tokens_to_argv(command);
+	if (!argv || !argv[0])
 	{
-		if (cur->type == COMMAND)
-		{
-			argv = tokens_to_argv(cur);
-			if (!argv)
-				return ;
-			if (ft_strcmp(argv[0], "echo") == 0)
-				handle_echo_command(tokens);
-			// else if (ft_strcmp(argv[0], "cd") == 0)
-			// 	handle_cd_command(argv, data);
-			// else if (ft_strcmp(argv[0], "pwd") == 0)
-			// 	handle_pwd_command();
-			else if (ft_strcmp(argv[0], "export") == 0)
-				handle_export_command(argv, data);
-			else if (ft_strcmp(argv[0], "unset") == 0)
-				handle_unset_command(argv, data);
-			else if (ft_strcmp(argv[0], "env") == 0)
-				handle_env_command(argv, data);
-			else if (ft_strcmp(argv[0], "exit") == 0)
-				handle_exit_command(argv, data);
-			else
-				printf("Command not found: %s\n", argv[0]);
-			free_argv(argv);
-			break ;
-		}
-		cur = cur->next;
+		free_argv(argv);
+		return ;
 	}
+	if (is_builtin(argv[0]))
+		run_builtin(argv, data);
+	// else
+	// 	run_external(argv, data);
+	free_argv(argv);
 }

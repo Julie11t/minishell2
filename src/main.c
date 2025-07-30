@@ -47,25 +47,25 @@ char	*get_input(t_data *data)
 		add_history(line);
 	return (line);
 }
-//not final (just to make the code work)
-t_token	*split_line_to_words(char *line)
-{
-	t_token	*head;
-	char	**words;
-	int		i;
 
-	head = NULL;
-	i = 0;
-	words = ft_split(line, ' ');
-	while (words[i])
-	{
-		create_token(&head, words[i], UNKNOWN);
-		free(words[i]);
-		i++;
-	}
-	free(words);
-	return (head);
-}
+// t_token	*split_line_to_words(char *line)
+// {
+// 	t_token	*head;
+// 	char	**words;
+// 	int		i;
+
+// 	head = NULL;
+// 	i = 0;
+// 	words = ft_split(line, ' ');
+// 	while (words[i])
+// 	{
+// 		create_token(&head, words[i], UNKNOWN);
+// 		free(words[i]);
+// 		i++;
+// 	}
+// 	free(words);
+// 	return (head);
+// }
 
 void	shell_loop(t_data *data)
 {
@@ -89,10 +89,14 @@ void	shell_loop(t_data *data)
 		}
 		mark_commands(tokens);
 		// TODO: parse and execute here
-		execute_builtin_tokens(tokens, data);
+		t_command *cmd = parse_tokens_to_command(tokens);
+		execute_redirection(cmd, data);
+		free_command(cmd);
+		// execute_command(tokens, data);
 		free_tokens(tokens);
 		free(line);
 	}
+	free_env(data->env);
 }
 
 int		main(int argc, char **argv, char **envp)

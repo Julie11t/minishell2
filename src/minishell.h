@@ -20,6 +20,7 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <signal.h>
+# include <fcntl.h>
 # include <readline/readline.h>
 # include <readline/history.h>
 # include "libft/libft.h"
@@ -44,6 +45,13 @@ typedef enum e_token_type
 // STRUCTS
 // ==============================
 
+typedef struct s_command
+{
+	char	**argv;
+	int		infile;
+	int		outfile;
+}	t_command;
+
 typedef struct s_token
 {
 	char			*value;
@@ -64,6 +72,7 @@ typedef struct s_data
 void	shell_loop(t_data *data);
 char	*get_input(t_data *data);
 char	**copy_env(char **envp);
+t_token *split_line_to_words(char *line);
 
 // ==============================
 // TOKENIZATION / PARSING
@@ -93,12 +102,14 @@ void	replace_token_with_multiple(t_token **head, t_token *cur, char **parts);
 // BUILTIN EXECUTION
 // ==============================
 
-void	execute_builtin_tokens(t_token *tokens, t_data *data);
-int	valid_identifier(char *str);
+void	execute_command(t_token *command, t_data *data);
+int		is_builtin(char *command);
+void	run_builtin(char **argv, t_data *data);
+int		valid_identifier(char *str);
 void	free_env(char **env);
-void	handle_echo_command(t_token *token);
-// void	handle_cd_command(char **argv, t_data *data);
-// void	handle_pwd_command(void);
+void	handle_echo_command(char **argv);
+void	handle_cd_command(char **argv, t_data *data);
+void	handle_pwd_command(void);
 void	handle_export_command(char **argv, t_data *data);
 void	handle_unset_command(char **argv, t_data *data);
 void	handle_env_command(char **args, t_data *data);
@@ -109,5 +120,9 @@ void	handle_exit_command(char **argv, t_data *data);
 // ==============================
 
 void	set_signals_interactive(void);
+
+void	execute_redirection(t_command *cmd, t_data *data);
+t_command	*parse_tokens_to_command(t_token *tokens);
+void	free_command(t_command *cmd);
 
 #endif
